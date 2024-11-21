@@ -23,13 +23,13 @@ class LogisticRegression:
     @staticmethod
     def _loss(y, y_pred, epsilon=1e-5):
         # Weighted cross entropy loss
-        weights = np.where(y == 1, 0.7, 0.3)
+        weights = np.where(y == 1, 0.5, 0.5)
         loss = -weights * (y * np.log(y_pred + epsilon) + (1 - y) * np.log(1 - y_pred + epsilon))
         return np.mean(loss)
 
     def _gradient(self, X, y, y_pred):
         # Weighted gradient for cross entropy loss
-        weights = np.where(y == 1, 0.7, 0.3)
+        weights = np.where(y == 1, 0.5, 0.5)
         reg_term = self.alpha * self.W  # Regularization term
         weighted_diff = weights * (y_pred - y)
         return (weighted_diff @ X) / y.size + reg_term

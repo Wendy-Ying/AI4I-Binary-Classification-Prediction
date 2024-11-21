@@ -61,3 +61,53 @@ def adasyn(X, y, minority_class, beta=1.0, k=5):
     y_resampled = np.hstack((y, np.full(len(X_synthetic), minority_class)))
 
     return X_resampled, y_resampled
+
+from sklearn.cluster import KMeans
+import numpy as np
+
+def cluster_undersample(X, y, ratio=0.5):
+    """
+    使用 K-Means 聚类对多数类样本进行欠采样，控制多数类样本占比。
+    
+    参数:
+        X: 特征矩阵 (numpy array)
+        y: 标签向量 (numpy array)
+        ratio: 欠采样后多数类样本占总样本的比例 (0 < ratio <= 1)。
+        
+    返回:
+        X_resampled: 欠采样后的特征矩阵
+        y_resampled: 欠采样后的标签向量
+    """
+    # Step 1: 统计类别分布，确定多数类和少数类
+    unique_classes, counts = np.unique(y, return_counts=True)
+    majority_class = unique_classes[np.argmax(counts)]
+    minority_class = unique_classes[np.argmin(counts)]
+    
+    X_majority = X[y == majority_class]
+    X_minority = X[y == minority_class]
+    n_minority = len(X_minority)
+    
+    # Step 2: 计算欠采样后多数类样本的目标数量
+    n_total = int(n_minority / (1 - ratio))  # 总样本数
+    n_majority_target = n_total - n_minority  # 欠采样后的多数类样本数
+
+    # Step 3: 使用 K-Means 聚类对多数类样本欠采样
+    kmeans = KMeans(n_clusters=n_majority_target, random_state=42)
+    kmeans.fit(X_majority)
+    
+    # Step 4: 从每个簇中选择一个代表样本（离簇中心最近的点）
+    cluster_centers = kmeans.cluster_centers_
+    X_representatives = []
+    for center in cluster_centers:
+        distances = np.linalg.norm(X_majority - center, axis=1)
+        representative_idx = np.argmin(distances)
+        X_representatives.append(X_majority[representative_idx])
+    
+    X_representatives = np.array(X_representatives)
+    y_representatives = np.full(len(X_representatives), majority_class)
+    
+    # Step 5: 合并少数类和代表多数类样本
+    X_resampled = np.vstack((X_minority, X_representatives))
+    y_resampled = np.hstack((np.full(n_minority, minority_class), y_representatives))
+    
+    return X_resampled, y_resampled

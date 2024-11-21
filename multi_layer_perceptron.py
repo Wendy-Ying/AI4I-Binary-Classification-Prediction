@@ -2,115 +2,171 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 class MultiLayerPerceptron:
-    def __init__(self, layer_sizes, n_iter=200, lr=1e-3, batch_size=128):
+    def __init__(self, layer_sizes, n_iter=200, lr=1e-3, batch_size=128, dropout_rate=0.2, l2_lambda=1e-4):
         self.layer_sizes = layer_sizes  # Number of neurons in each layer
         self.n_iter = n_iter  # Number of iterations (epochs)
-        self.lr = lr  # Learning rate
+        self.lr = lr  # Initial learning rate
         self.batch_size = batch_size  # Batch size for training
+        self.dropout_rate = dropout_rate  # Dropout rate
+        self.l2_lambda = l2_lambda  # L2 regularization strength
         self.num_layers = len(layer_sizes)  # Total number of layers
-        self.weights = []  # List to store weights of each layer
-        self.biases = []  # List to store biases of each layer
+        self.training = True  # Training mode
 
         # Initialize weights and biases with random values
-        for i in range(self.num_layers - 1):
-            weight = np.random.randn(layer_sizes[i], layer_sizes[i + 1]) * np.sqrt(2 / layer_sizes[i])
-            bias = np.zeros((1, layer_sizes[i + 1]))
-            self.weights.append(weight)
-            self.biases.append(bias)
+        self.weights = [np.random.randn(layer_sizes[i], layer_sizes[i + 1]) * np.sqrt(2 / layer_sizes[i]) 
+                        for i in range(self.num_layers - 1)]
+        self.biases = [np.zeros((1, layer_sizes[i + 1])) for i in range(self.num_layers - 1)]
+
+        # Adam optimizer parameters
+        self.m_weights = [np.zeros_like(w) for w in self.weights]
+        self.v_weights = [np.zeros_like(w) for w in self.weights]
+        self.m_biases = [np.zeros_like(b) for b in self.biases]
+        self.v_biases = [np.zeros_like(b) for b in self.biases]
+        self.beta1 = 0.9
+        self.beta2 = 0.999
+        self.epsilon = 1e-8
 
     def activation(self, x):
-        # Sigmoid activation function
-        return 1 / (1 + np.exp(-x))
+        # leaky relu
+        return np.where(x > 0, x, 0.01 * x)
 
     def activation_derivative(self, x):
-        # Derivative of sigmoid function
-        return x * (1 - x)
+        # Derivative of leaky relu
+        return np.where(x > 0, 1, 0.01)
+
+    def softmax(self, x):
+        # Softmax activation for the output layer
+        exp_x = np.exp(x - np.max(x, axis=1, keepdims=True))  # Stability improvement
+        return exp_x / np.sum(exp_x, axis=1, keepdims=True)
+
+    def dropout(self, x):
+        if self.training:
+            mask = np.random.rand(*x.shape) > self.dropout_rate
+            return x * mask / (1 - self.dropout_rate)
+        return x
 
     def forward(self, inputs):
-        # Forward pass through the network
-        self.activations = [inputs]  # Store activations for each layer
-        for i in range(self.num_layers - 1):
-            z = np.dot(self.activations[i], self.weights[i]) + self.biases[i]
+        # Forward pass with Dropout for hidden layers
+        self.z_values = []
+        self.activations = [inputs]
+        for i in range(self.num_layers - 2):
+            z = np.dot(self.activations[-1], self.weights[i]) + self.biases[i]
+            self.z_values.append(z)
             activation = self.activation(z)
+            activation = self.dropout(activation)  # Apply dropout
             self.activations.append(activation)
+        # Output layer with Softmax
+        z = np.dot(self.activations[-1], self.weights[-1]) + self.biases[-1]
+        self.z_values.append(z)
+        activation = self.softmax(z)
+        self.activations.append(activation)
         return self.activations[-1]
 
-    def backward(self, inputs, targets, learning_rate):
-        # Ensure targets have the correct shape
-        if targets.ndim == 1:
-            targets = targets.reshape(-1, 1)  # Ensure targets match the output shape
-        
-        # Calculate output error and delta
-        output_errors = targets - self.activations[-1]
-        output_delta = output_errors * self.activation_derivative(self.activations[-1])
-        
-        # Update weights and biases for the output layer
-        self.weights[-1] += np.dot(self.activations[-2].T, output_delta) * learning_rate
-        self.biases[-1] += np.sum(output_delta, axis=0, keepdims=True) * learning_rate
-        
+    def compute_loss(self, predictions, targets):
+        # Cross-entropy loss with L2 regularization
+        epsilon = 1e-10
+        predictions = np.clip(predictions, epsilon, 1 - epsilon)
+        cross_entropy_loss = -np.mean(np.sum(targets * np.log(predictions), axis=1))
+        l2_loss = self.l2_lambda * sum(np.sum(w ** 2) for w in self.weights)
+        return cross_entropy_loss + l2_loss
+    
+    def one_hot_encode(self, targets, num_classes):
+        return np.eye(num_classes)[targets]
+
+    def backward(self, inputs, targets, epoch):
+        m = inputs.shape[0]
+        predictions = self.activations[-1]
+        delta = predictions - targets
+
+        # Update output layer
+        grad_w = np.dot(self.activations[-2].T, delta) / m + 2 * self.l2_lambda * self.weights[-1]
+        grad_b = np.sum(delta, axis=0, keepdims=True) / m
+        self.update_params(-1, grad_w, grad_b, epoch)
+
         # Backpropagate through hidden layers
-        delta = output_delta
         for i in range(self.num_layers - 2, 0, -1):
-            hidden_errors = np.dot(delta, self.weights[i].T)
-            hidden_delta = hidden_errors * self.activation_derivative(self.activations[i])
-            
-            # Update weights and biases for the hidden layer
-            self.weights[i - 1] += np.dot(self.activations[i - 1].T, hidden_delta) * learning_rate
-            self.biases[i - 1] += np.sum(hidden_delta, axis=0, keepdims=True) * learning_rate
-            delta = hidden_delta
+            delta = np.dot(delta, self.weights[i].T) * self.activation_derivative(self.z_values[i - 1])
+            grad_w = np.dot(self.activations[i - 1].T, delta) / m + 2 * self.l2_lambda * self.weights[i - 1]
+            grad_b = np.sum(delta, axis=0, keepdims=True) / m
+            self.update_params(i - 1, grad_w, grad_b, epoch)
 
-    def mean_squared_error(self, predictions, targets):
-        # Mean squared error loss
-        return np.mean((predictions - targets) ** 2)
+    def update_params(self, layer_index, grad_w, grad_b, epoch):
+        # Adam optimizer update rule
+        self.m_weights[layer_index] = self.beta1 * self.m_weights[layer_index] + (1 - self.beta1) * grad_w
+        self.v_weights[layer_index] = self.beta2 * self.v_weights[layer_index] + (1 - self.beta2) * (grad_w ** 2)
+        m_hat_w = self.m_weights[layer_index] / (1 - self.beta1 ** (epoch + 1))
+        v_hat_w = self.v_weights[layer_index] / (1 - self.beta2 ** (epoch + 1))
 
-    def train(self, inputs, targets, test_inputs, test_targets):
-        # Train the network using mini-batch gradient descent
+        self.m_biases[layer_index] = self.beta1 * self.m_biases[layer_index] + (1 - self.beta1) * grad_b
+        self.v_biases[layer_index] = self.beta2 * self.v_biases[layer_index] + (1 - self.beta2) * (grad_b ** 2)
+        m_hat_b = self.m_biases[layer_index] / (1 - self.beta1 ** (epoch + 1))
+        v_hat_b = self.v_biases[layer_index] / (1 - self.beta2 ** (epoch + 1))
+
+        self.weights[layer_index] -= self.lr * m_hat_w / (np.sqrt(v_hat_w) + self.epsilon)
+        self.biases[layer_index] -= self.lr * m_hat_b / (np.sqrt(v_hat_b) + self.epsilon)
+        
+    def train(self, inputs, targets, test_inputs, test_targets, early_stopping_patience=1000, tol=1e-6):
+        # Initialize lists to store training and testing loss history
         self.train_loss_history = []
         self.test_loss_history = []
+        
+        # Early stopping variables
+        best_test_loss = float('inf')
+        no_improvement_count = 0
+        num_classes = self.layer_sizes[-1]
 
         for epoch in range(self.n_iter):
             # Shuffle the training data
             indices = np.arange(inputs.shape[0])
             np.random.shuffle(indices)
-            inputs_train = inputs[indices]
-            targets_train = targets[indices]
+            shuffled_inputs = inputs[indices]
+            shuffled_targets = targets[indices]
 
             # Process data in batches
-            for start in range(0, len(inputs_train), self.batch_size):
-                end = min(start + self.batch_size, len(inputs_train))
-                batch_inputs = inputs_train[start:end]
-                batch_targets = targets_train[start:end]
+            for start in range(0, len(shuffled_inputs), self.batch_size):
+                end = min(start + self.batch_size, len(shuffled_inputs))
+                batch_inputs = shuffled_inputs[start:end]
+                batch_targets = shuffled_targets[start:end]
+                batch_targets = self.one_hot_encode(batch_targets, num_classes)
                 # Perform forward and backward passes
                 self.forward(batch_inputs)
-                self.backward(batch_inputs, batch_targets, self.lr)
-            
+                self.backward(batch_inputs, batch_targets, epoch)
+
             # Record training and testing loss
             train_predictions = self.forward(inputs)
             test_predictions = self.forward(test_inputs)
-            train_loss = self.mean_squared_error(train_predictions, targets)
-            test_loss = self.mean_squared_error(test_predictions, test_targets)
+            train_loss = self.compute_loss(train_predictions, self.one_hot_encode(targets, num_classes))
+            test_loss = self.compute_loss(test_predictions, self.one_hot_encode(test_targets, num_classes))
             self.train_loss_history.append(train_loss)
             self.test_loss_history.append(test_loss)
 
             # Print progress
-            if (epoch + 1) % 100 == 0:
+            if (epoch + 1) % 100 == 0 or epoch == 0:
                 print(f"Epoch {epoch + 1}/{self.n_iter}, Train Loss: {train_loss:.4f}, Test Loss: {test_loss:.4f}")
 
+            # Early stopping logic
+            if test_loss < best_test_loss - tol:
+                best_test_loss = test_loss
+                no_improvement_count = 0  # Reset patience counter
+            else:
+                no_improvement_count += 1
+            
+            if no_improvement_count >= early_stopping_patience:
+                print(f"Early stopping triggered at epoch {epoch + 1}. Best validation loss: {best_test_loss:.4f}")
+                break
+
     def predict(self, inputs):
-        # Predict class labels for inputs
-        y_pred = self.forward(inputs)
-        y_pred = np.where(y_pred >= 0.5, 1, 0)
-        return y_pred
+        # Forward pass to get softmax probabilities
+        probabilities = self.forward(inputs)
+        # Return the class index with the highest probability
+        return np.argmax(probabilities, axis=1)
 
     def plot_loss(self):
-        # Plot training and testing loss
-        plt.figure()
-        plt.plot(self.train_loss_history, label='Train Loss')
-        plt.plot(self.test_loss_history, label='Test Loss')
+        plt.plot(self.train_loss_history, label="Train Loss")
+        plt.plot(self.test_loss_history, label="Test Loss")
         plt.legend()
-        plt.title('Loss Over Iterations')
-        plt.xlabel('Iteration')
-        plt.ylabel('Loss')
-        plt.grid()
-        plt.savefig('mlp_loss.png')
+        plt.title("Loss Over Iterations")
+        plt.xlabel("Iteration")
+        plt.ylabel("Loss")
+        plt.savefig("mlp_loss.png")
         plt.show()
