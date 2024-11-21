@@ -45,3 +45,26 @@ Recall: 0.8173913043478261
 F1 Score: 0.7673469387755102
 Total time taken: 2.7166144847869873 seconds
 <img src="./perceptron_loss-2.png" width=45%> <img src="./confusion_results-4.png" width=45%>
+
+## logistic regression
+### my model
+logistic_model = LogisticRegression(n_iter=30000, lr=3e-3, batch_size=64)
+
+**TP: 85  TN: 195  FP: 52  FN: 21**
+Accuracy: 0.7932011331444759
+Precision: 0.6204379562043796
+Recall: 0.8018867924528302
+F1 Score: 0.6995884773662552
+Total time taken: 19.374540090560913 seconds
+<img src="./logistic_loss-1.png" width=45%> <img src="./confusion_results-5.png" width=45%>
+
+### sklearn
+logistic_sklearn = LogisticRegression(max_iter=100000, random_state=42)
+
+**TP: 61  TN: 165  FP: 26  FN: 21**
+Accuracy: 0.8278388278388278
+Precision: 0.7011494252873564
+Recall: 0.7439024390243902
+F1 Score: 0.7218934911242605
+Total time taken: 2.442545175552368 seconds
+<img src="./logistic_loss-2.png" width=45%> <img src="./confusion_results-6.png" width=45%>
