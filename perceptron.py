@@ -7,25 +7,29 @@ def convert_labels(y):
     return np.where(y == 0, -1, 1)
 
 class Perceptron:
-    def __init__(self, n_iter=200, lr=0.01, batch_size=64):
+    def __init__(self, n_iter=200, lr=0.01, batch_size=64, positive_weight=0.5, alpha=0.01):
         self.n_iter = n_iter  # Number of iterations
         self.lr = lr  # Learning rate
         self.batch_size = batch_size  # Batch size
         self.W = None  # Initialize weights
         self.loss = []  # Training loss history
         self.test_loss = []  # Test loss history
+        self.alpha = alpha  # Regularization parameter
+        self.positive_weight = positive_weight  # Weight for positive class
 
     def _loss_batch(self, y, y_pred):
-        # Weighted hinge loss for a batch
-        weights = np.where(y == 1, 0.5, 0.5)
-        loss = np.maximum(0, -y * y_pred) * weights
-        return loss.mean()
+        # Weighted hinge loss for a batch with L2 regularization
+        weights = np.where(y == 1, self.positive_weight, 1 - self.positive_weight)
+        hinge_loss = np.maximum(0, -y * y_pred) * weights
+        reg_loss = self.alpha * np.sum(self.W[1:] ** 2)  # Exclude bias term from regularization
+        return hinge_loss.mean() + reg_loss
 
     def _gradient_batch(self, X, y, y_pred):
-        # Gradient of weighted hinge loss for a batch
-        weights = np.where(y == 1, 0.5, 0.5)
+        # Gradient of weighted hinge loss for a batch with L2 regularization
+        weights = np.where(y == 1, self.positive_weight, 1 - self.positive_weight)
         misclassified = y_pred * y < 0
         gradient = -(X[misclassified].T @ (weights[misclassified] * y[misclassified])) / X.shape[0]
+        gradient[1:] += 2 * self.alpha * self.W[1:]  # Apply L2 regularization (exclude bias)
         return gradient
 
     def _preprocess_data(self, X):
@@ -35,7 +39,7 @@ class Perceptron:
     def mbgd_update(self, X, y, X_test, y_test):
         # Mini-batch gradient descent
         n_samples = X.shape[0]
-        self.W = np.random.rand(X.shape[1])
+        self.W = np.random.normal(0, 0.1, X.shape[1])
 
         for epoch in range(self.n_iter):
             # Shuffle data
@@ -54,6 +58,8 @@ class Perceptron:
                 # Update weights
                 self.W -= self.lr * grad
 
+            self.lr *= 0.999
+            
             # Calculate loss for the epoch
             train_loss = self._loss_batch(y, X @ self.W)
             test_loss = self._loss_batch(y_test, X_test @ self.W)

@@ -7,7 +7,7 @@ def evaluate_model(model, X_test, Y_test):
     TN = sum((predictions[i] == 0) and (Y_test[i] == 0) for i in range(len(Y_test)))
     FP = sum((predictions[i] == 1) and (Y_test[i] == 0) for i in range(len(Y_test)))
     FN = sum((predictions[i] == 0) and (Y_test[i] == 1) for i in range(len(Y_test)))
-    print("TP:", TP, "TN:", TN, "FP:", FP, "FN:", FN)
+    print("TP:", TP, " TN:", TN, " FP:", FP, " FN:", FN)
     accuracy = (TP + TN) / (TP + TN + FP + FN)
     precision = TP / (TP + FP) if (TP + FP)!= 0 else 0
     recall = TP / (TP + FN) if (TP + FN)!= 0 else 0
