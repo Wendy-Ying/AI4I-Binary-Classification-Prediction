@@ -1,4 +1,4 @@
-
+# AI4I Binary Classification Prediction
 ## linear regression
 ### my model
 linear_model = LinearRegression(n_iter=50000, lr=9e-4, batch_size=64)
