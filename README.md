@@ -14,4 +14,5 @@ Recall: 0.7980769230769231
 F1 Score: 0.7443946188340808
 Total time taken: 38.09750461578369 seconds
 
-![Linear Loss](./linear_loss-1.png){ width=45% } ![Confusion Results](./confusion_results-1.png){ width=45% }
+<img src="./linear_loss-1.png" width=45%>
+<img src="./confusion_results-1.png" width=45%>
