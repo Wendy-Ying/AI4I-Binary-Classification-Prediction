@@ -39,7 +39,7 @@ def plot_confusion_results(model, X_test, Y_test):
     ax.scatter(X_plot[TP_mask][:, 0], X_plot[TP_mask][:, 1], X_plot[TP_mask][:, 2], 
                c='green', label='True Positive (TP)', alpha=0.8, edgecolor='k', marker='o')
     ax.scatter(X_plot[FP_mask][:, 0], X_plot[FP_mask][:, 1], X_plot[FP_mask][:, 2], 
-               c='red', label='False Positive (FP)', alpha=0.8, edgecolor='k', marker='x')
+               c='red', label='False Positive (FP)', alpha=0.8, marker='x')
     ax.scatter(X_plot[TN_mask][:, 0], X_plot[TN_mask][:, 1], X_plot[TN_mask][:, 2], 
                c='blue', label='True Negative (TN)', alpha=0.8, edgecolor='k', marker='^')
     ax.scatter(X_plot[FN_mask][:, 0], X_plot[FN_mask][:, 1], X_plot[FN_mask][:, 2], 

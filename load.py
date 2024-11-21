@@ -69,8 +69,8 @@ def load_dataset(file_path):
     X_train, Y_train, X_test, Y_test = split_train_test(X, Y, train_ratio=0.7)
 
     # Step 8: Balance the dataset
-    X_train, Y_train = adasyn(X_train, Y_train, minority_class=1, beta=0.1, k=5)
+    # X_train, Y_train = adasyn(X_train, Y_train, minority_class=1, beta=0.1, k=5)
     X_train, Y_train = cluster_undersample(X_train, Y_train, ratio=0.6)
-    X_test, Y_test = cluster_undersample(X_test, Y_test, ratio=0.65)
+    X_test, Y_test = cluster_undersample(X_test, Y_test, ratio=0.7)
 
     return X_train, Y_train, X_test, Y_test

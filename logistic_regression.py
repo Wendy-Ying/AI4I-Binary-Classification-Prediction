@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-
 class LogisticRegression:
     def __init__(self, n_iter=200, lr=1e-3, alpha=0.05, batch_size=64):
         self.n_iter = n_iter # number of iterations

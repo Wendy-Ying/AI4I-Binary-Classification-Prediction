@@ -38,14 +38,14 @@ class LinearRegression:
 
     def calculate_loss(self, y_true, y_pred):
         # MSE loss
-        weights = np.where(y_true == 0, 0.5, 0.5)
+        weights = np.where(y_true == 0, 0.4, 0.6)
         loss = weights * (y_true - y_pred)**2
         return np.mean(loss)
 
     def gradient(self, X, y, y_pred):
         # gradient
         X = self.preprocess_data_X(X)
-        weights = np.where(y == 0, 0.5, 0.5) 
+        weights = np.where(y == 0, 0.4, 0.6) 
         grad = (X.T @ ((weights * (y_pred - y)).reshape(-1, 1))).flatten() / y.size
         return grad
 
