@@ -1,4 +1,14 @@
 # AI4I Binary Classification Prediction
+
+This project applies machine learning to the AI4I 2020 Predictive Maintenance Dataset for predicting machine failures. Models including linear regression, perceptrons, logistic regression, and multi-layer perceptrons were evaluated. The MLP outperformed others with an F1-score of 0.841, effectively handling complex patterns and minimizing false negatives. These results emphasize the potential of machine learning in improving industrial predictive maintenance.
+
+I also write a [report](https://github.com/Wendy-Ying/AI4I-Binary-Classification-Prediction/blob/main/report.pdf) about it.
+
+Usage:
+
+You can directly use it by [main.py](https://github.com/Wendy-Ying/AI4I-Binary-Classification-Prediction/blob/main/main.py), or you can see the detailed code in [linear_regression.py](https://github.com/Wendy-Ying/AI4I-Binary-Classification-Prediction/blob/main/linear_regression.py), [perceptron.py](https://github.com/Wendy-Ying/AI4I-Binary-Classification-Prediction/blob/main/perceptron.py), [logistic_regression.py](https://github.com/Wendy-Ying/AI4I-Binary-Classification-Prediction/blob/main/logistic_regression.py), [multi-layer-perceptron.py](https://github.com/Wendy-Ying/AI4I-Binary-Classification-Prediction/blob/main/multi_layer_perceptron.py).
+
+
 ## linear regression
 ### my model
 linear_model = LinearRegression(n_iter=50000, lr=8e-4, batch_size=64)
