@@ -2,7 +2,7 @@
 
 This project applies machine learning to the AI4I 2020 Predictive Maintenance Dataset for predicting machine failures. Models including linear regression, perceptrons, logistic regression, and multi-layer perceptrons were evaluated. The MLP outperformed others with an F1-score of 0.841, effectively handling complex patterns and minimizing false negatives. These results emphasize the potential of machine learning in improving industrial predictive maintenance.
 
-I also write a [report](https://github.com/Wendy-Ying/AI4I-Binary-Classification-Prediction/blob/main/report.pdf) about it. The report is organize like this:
+I also write a [report](https://github.com/Wendy-Ying/AI4I-Binary-Classification-Prediction/blob/main/AI4I%20Binary%20Classification%20Prediction%20Report.pdf) about it. There is also a [PPT](https://github.com/Wendy-Ying/AI4I-Binary-Classification-Prediction/blob/main/AI4I%20Binary%20Classification%20Prediction%20PPT.pdf) for presentation. And the [Experiment Course](https://github.com/Wendy-Ying/AI4I-Binary-Classification-Prediction/blob/main/Experiment%20Course.pdf) records the running result.The report is organize like this:
 
 <img src="https://github.com/user-attachments/assets/626e2068-4c5c-471a-af33-a9f3dc5f26fc" width=30%>
 
