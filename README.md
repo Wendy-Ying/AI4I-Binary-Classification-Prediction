@@ -21,7 +21,8 @@ Precision: 0.7959183673469388
 Recall: 0.7647058823529411
 F1 Score: 0.7799999999999999
 Total time taken: 5.636926174163818 seconds
-<img src="./linear_loss-2.png" width=45%> <img src="./confusion_results-2.png" width=45%>
+
+<img src="./confusion_results-2.png" width=45%>
 
 ## perceptron
 ### my model
@@ -33,6 +34,7 @@ Precision: 0.6986301369863014
 Recall: 0.8292682926829268
 F1 Score: 0.758364312267658
 Total time taken: 19.484343767166138 seconds
+
 <img src="./perceptron_loss-1.png" width=45%> <img src="./confusion_results-3.png" width=45%>
 
 ### sklearn
@@ -44,7 +46,8 @@ Precision: 0.7230769230769231
 Recall: 0.8173913043478261
 F1 Score: 0.7673469387755102
 Total time taken: 2.7166144847869873 seconds
-<img src="./perceptron_loss-2.png" width=45%> <img src="./confusion_results-4.png" width=45%>
+
+<img src="./confusion_results-4.png" width=45%>
 
 ## logistic regression
 ### my model
@@ -56,6 +59,7 @@ Precision: 0.6204379562043796
 Recall: 0.8018867924528302
 F1 Score: 0.6995884773662552
 Total time taken: 19.374540090560913 seconds
+
 <img src="./logistic_loss-1.png" width=45%> <img src="./confusion_results-5.png" width=45%>
 
 ### sklearn
@@ -67,4 +71,30 @@ Precision: 0.7011494252873564
 Recall: 0.7439024390243902
 F1 Score: 0.7218934911242605
 Total time taken: 2.442545175552368 seconds
-<img src="./logistic_loss-2.png" width=45%> <img src="./confusion_results-6.png" width=45%>
+
+<img src="./confusion_results-6.png" width=45%>
+
+## MLP
+### my model
+mlp_model = MultiLayerPerceptron(layer_sizes=[X_train.shape[1],47,101,32], n_iter=10000, lr=1e-5, batch_size=32)
+
+**TP: 87  TN: 213  FP: 20  FN: 13**
+Accuracy: 0.9009009009009009
+Precision: 0.8130841121495327
+Recall: 0.87
+F1 Score: 0.8405797101449274
+Total time taken: 421.797244310379 seconds
+
+<img src="./mlp_loss-1.png" width=45%> <img src="./confusion_results-7.png" width=45%>
+
+### sklearn
+mlp_sklearn = MLPClassifier(hidden_layer_sizes=(12,47,101,11), activation='relu', solver='adam', max_iter=10000, random_state=42)
+
+**TP: 90  TN: 213  FP: 15  FN: 8**
+Accuracy: 0.9294478527607362
+Precision: 0.8571428571428571
+Recall: 0.9183673469387755
+F1 Score: 0.8866995073891625
+Total time taken: 8.705824136734009 seconds
+
+<img src="./confusion_results-8.png" width=45%>

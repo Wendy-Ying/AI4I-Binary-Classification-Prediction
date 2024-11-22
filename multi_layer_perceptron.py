@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 class MultiLayerPerceptron:
-    def __init__(self, layer_sizes, n_iter=200, lr=1e-3, batch_size=128, dropout_rate=0.2, l2_lambda=1e-4):
+    def __init__(self, layer_sizes, n_iter=200, lr=1e-3, batch_size=128, dropout_rate=0.2, l2_lambda=3e-4):
         self.layer_sizes = layer_sizes  # Number of neurons in each layer
         self.n_iter = n_iter  # Number of iterations (epochs)
         self.lr = lr  # Initial learning rate
@@ -10,7 +10,7 @@ class MultiLayerPerceptron:
         self.dropout_rate = dropout_rate  # Dropout rate
         self.l2_lambda = l2_lambda  # L2 regularization strength
         self.num_layers = len(layer_sizes)  # Total number of layers
-        self.training = True  # Training mode
+        self.training = False  # Training mode
 
         # Initialize weights and biases with random values
         self.weights = [np.random.randn(layer_sizes[i], layer_sizes[i + 1]) * np.sqrt(2 / layer_sizes[i]) 
@@ -27,12 +27,12 @@ class MultiLayerPerceptron:
         self.epsilon = 1e-8
 
     def activation(self, x):
-        # leaky relu
-        return np.where(x > 0, x, 0.01 * x)
+        # relu
+        return np.maximum(0, x)
 
     def activation_derivative(self, x):
         # Derivative of leaky relu
-        return np.where(x > 0, 1, 0.01)
+        return np.where(x > 0, 1, 0)
 
     def softmax(self, x):
         # Softmax activation for the output layer
@@ -66,7 +66,8 @@ class MultiLayerPerceptron:
         # Cross-entropy loss with L2 regularization
         epsilon = 1e-10
         predictions = np.clip(predictions, epsilon, 1 - epsilon)
-        cross_entropy_loss = -np.mean(np.sum(targets * np.log(predictions), axis=1))
+        weights = np.where(targets == 1, 1.2, 1.0)
+        cross_entropy_loss = -np.mean(np.sum(weights * targets * np.log(predictions), axis=1))
         l2_loss = self.l2_lambda * sum(np.sum(w ** 2) for w in self.weights)
         return cross_entropy_loss + l2_loss
     
@@ -104,16 +105,10 @@ class MultiLayerPerceptron:
 
         self.weights[layer_index] -= self.lr * m_hat_w / (np.sqrt(v_hat_w) + self.epsilon)
         self.biases[layer_index] -= self.lr * m_hat_b / (np.sqrt(v_hat_b) + self.epsilon)
-        
-    def train(self, inputs, targets, test_inputs, test_targets, early_stopping_patience=1000, tol=1e-6):
-        # Initialize lists to store training and testing loss history
+
+    def train(self, inputs, targets, test_inputs, test_targets):
         self.train_loss_history = []
         self.test_loss_history = []
-        
-        # Early stopping variables
-        best_test_loss = float('inf')
-        no_improvement_count = 0
-        num_classes = self.layer_sizes[-1]
 
         for epoch in range(self.n_iter):
             # Shuffle the training data
@@ -127,34 +122,24 @@ class MultiLayerPerceptron:
                 end = min(start + self.batch_size, len(shuffled_inputs))
                 batch_inputs = shuffled_inputs[start:end]
                 batch_targets = shuffled_targets[start:end]
-                batch_targets = self.one_hot_encode(batch_targets, num_classes)
-                # Perform forward and backward passes
+                batch_targets = self.one_hot_encode(batch_targets, 2)
                 self.forward(batch_inputs)
                 self.backward(batch_inputs, batch_targets, epoch)
 
             # Record training and testing loss
             train_predictions = self.forward(inputs)
             test_predictions = self.forward(test_inputs)
-            train_loss = self.compute_loss(train_predictions, self.one_hot_encode(targets, num_classes))
-            test_loss = self.compute_loss(test_predictions, self.one_hot_encode(test_targets, num_classes))
+            train_loss = self.compute_loss(train_predictions, self.one_hot_encode(targets, 2))
+            test_loss = self.compute_loss(test_predictions, self.one_hot_encode(test_targets, 2))
             self.train_loss_history.append(train_loss)
             self.test_loss_history.append(test_loss)
-
+            
             # Print progress
             if (epoch + 1) % 100 == 0 or epoch == 0:
-                print(f"Epoch {epoch + 1}/{self.n_iter}, Train Loss: {train_loss:.4f}, Test Loss: {test_loss:.4f}")
-
-            # Early stopping logic
-            if test_loss < best_test_loss - tol:
-                best_test_loss = test_loss
-                no_improvement_count = 0  # Reset patience counter
-            else:
-                no_improvement_count += 1
+                print(f"Epoch {epoch + 1}/{self.n_iter}, Train Loss: {train_loss:.4f}, Test Loss: {test_loss:.4f}, Test F1 Score: {f1:.4f}")
             
-            if no_improvement_count >= early_stopping_patience:
-                print(f"Early stopping triggered at epoch {epoch + 1}. Best validation loss: {best_test_loss:.4f}")
-                break
-
+            self.lr = 0.9999 * self.lr
+            
     def predict(self, inputs):
         # Forward pass to get softmax probabilities
         probabilities = self.forward(inputs)

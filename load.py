@@ -28,11 +28,11 @@ def load_dataset(file_path):
     """
     1. Loading data and cleaning missing values.
     2. Dropping unnecessary columns.
-    3. Replacing 'Type' column values: L -> -1, M -> 0, H -> 1.
+    3. Replacing 'Type' column values: L -> 11, M -> 12, H -> 13.
     4. Adding custom features: 
        - Air temperature [K] * Process temperature [K]
        - Rotational speed [rpm] * Torque [Nm]
-       - Torque [Nm] * Tool wear [min] * (Type == "L")
+       - Torque [Nm] * Tool wear [min] * Type
     5. Applying mean normalization to features.
     6. Splitting the dataset into features and labels.
     7. Splitting the dataset into training and testing sets.
@@ -69,7 +69,7 @@ def load_dataset(file_path):
     X_train, Y_train, X_test, Y_test = split_train_test(X, Y, train_ratio=0.7)
 
     # Step 8: Balance the dataset
-    # X_train, Y_train = adasyn(X_train, Y_train, minority_class=1, beta=0.1, k=5)
+    X_train, Y_train = adasyn(X_train, Y_train, minority_class=1, beta=0.1, k=5)
     X_train, Y_train = cluster_undersample(X_train, Y_train, ratio=0.6)
     X_test, Y_test = cluster_undersample(X_test, Y_test, ratio=0.7)
 
