@@ -136,7 +136,7 @@ class MultiLayerPerceptron:
             
             # Print progress
             if (epoch + 1) % 100 == 0 or epoch == 0:
-                print(f"Epoch {epoch + 1}/{self.n_iter}, Train Loss: {train_loss:.4f}, Test Loss: {test_loss:.4f}, Test F1 Score: {f1:.4f}")
+                print(f"Epoch {epoch + 1}/{self.n_iter}, Train Loss: {train_loss:.4f}, Test Loss: {test_loss:.4f}")
             
             self.lr = 0.9999 * self.lr
             
