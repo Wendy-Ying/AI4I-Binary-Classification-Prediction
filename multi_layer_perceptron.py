@@ -109,7 +109,9 @@ class MultiLayerPerceptron:
     def train(self, inputs, targets, test_inputs, test_targets):
         self.train_loss_history = []
         self.test_loss_history = []
-
+        targets = self.one_hot_encode(targets, self.layer_sizes[-1])
+        test_targets = self.one_hot_encode(test_targets, self.layer_sizes[-1])
+        
         for epoch in range(self.n_iter):
             # Shuffle the training data
             indices = np.arange(inputs.shape[0])
@@ -122,15 +124,14 @@ class MultiLayerPerceptron:
                 end = min(start + self.batch_size, len(shuffled_inputs))
                 batch_inputs = shuffled_inputs[start:end]
                 batch_targets = shuffled_targets[start:end]
-                batch_targets = self.one_hot_encode(batch_targets, 2)
                 self.forward(batch_inputs)
                 self.backward(batch_inputs, batch_targets, epoch)
 
             # Record training and testing loss
             train_predictions = self.forward(inputs)
             test_predictions = self.forward(test_inputs)
-            train_loss = self.compute_loss(train_predictions, self.one_hot_encode(targets, 2))
-            test_loss = self.compute_loss(test_predictions, self.one_hot_encode(test_targets, 2))
+            train_loss = self.compute_loss(train_predictions, targets)
+            test_loss = self.compute_loss(test_predictions, test_targets)
             self.train_loss_history.append(train_loss)
             self.test_loss_history.append(test_loss)
             
