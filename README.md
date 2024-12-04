@@ -10,6 +10,9 @@ Usage:
 
 You can directly use it by [main.py](https://github.com/Wendy-Ying/AI4I-Binary-Classification-Prediction/blob/main/main.py), or you can see the detailed code in [linear_regression.py](https://github.com/Wendy-Ying/AI4I-Binary-Classification-Prediction/blob/main/linear_regression.py), [perceptron.py](https://github.com/Wendy-Ying/AI4I-Binary-Classification-Prediction/blob/main/perceptron.py), [logistic_regression.py](https://github.com/Wendy-Ying/AI4I-Binary-Classification-Prediction/blob/main/logistic_regression.py), [multi-layer-perceptron.py](https://github.com/Wendy-Ying/AI4I-Binary-Classification-Prediction/blob/main/multi_layer_perceptron.py).
 
+## cool!
+![image](https://github.com/user-attachments/assets/a9cc5c59-9a5e-490c-b9a6-ad988218a5e3)
+
 
 ## linear regression
 ### my model
